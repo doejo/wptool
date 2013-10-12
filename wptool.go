@@ -124,39 +124,42 @@ func wp_core_download(options *CoreDownloadOptions) {
   url := fmt.Sprintf(WP_DOWNLOAD_URL, options.Version)
   temp := "/tmp/wordpress.tar.gz"
 
-  if fileExists(temp) {
-    run(fmt.Sprintf("rm -f %s", temp))
-  }
-
   if fileExists(options.Path) && !options.Force {
-    fmt.Println("Target path already exists!")
+    fmt.Println("Path already exists")
     os.Exit(1)
   }
 
+  /* Remove downloaded file if exists */
+  if fileExists(temp) {
+    fmt.Println("Removing temporary archive")
+    run(fmt.Sprintf("rm -f %s", temp))
+  }
+
   /* Download specified wordpress core */
-  cmd := fmt.Sprintf("wget -O %s %s", temp, url)
-  out, err := run(cmd)
+  fmt.Println("Downloading core:", url)
+  out, err := run(fmt.Sprintf("wget -O %s %s", temp, url))
 
   if err != nil {
-    fmt.Println("Unable to download Wordpress Core!")
-    fmt.Println(out)
+    fmt.Println("Unable to download wordpress core")
     os.Exit(1)
   }
  
   /* Extract downloaded core tarball */
   out, err = run(fmt.Sprintf("cd /tmp && tar -zxf %s", temp))
   if err != nil {
-    fmt.Println("Failed to extract wordpress core:", err)
+    fmt.Println("Unable to extract core", err)
     fmt.Println(out)
     os.Exit(1)
   }
 
   /* Remove existing directory with `--force` option */
   if fileExists(options.Path) && options.Force {
+    fmt.Println("Removing existing core")
     run(fmt.Sprintf("rm -rf %s", options.Path))
   }
 
   /* Move extracted files to target directory */
+  fmt.Println("Extracting core")
   _, err = run(fmt.Sprintf("mv /tmp/wordpress %s", options.Path))
   if (err != nil) {
     fmt.Println("Failed to move extracted core")
