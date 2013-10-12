@@ -104,19 +104,14 @@ func wp_core_version(path string) {
 }
 
 func wp_core_list() {
-  resp, err := http.Get(WP_VERSIONS_FILE)
+  result := getUrlContents(WP_VERSIONS_FILE)
 
-  if err != nil {
-    fmt.Println("Unable to get list of versions...")
-    return
+  if len(result) == 0 {
+    fmt.Println("Unable to get list of versions")
+    os.Exit(1)
   }
 
-  defer resp.Body.Close()
-
-  body, err := ioutil.ReadAll(resp.Body)
-
-  fmt.Println("Available Wordpress versions:")
-  fmt.Println(string(body))
+  fmt.Println(result)
 }
 
 func wp_core_download(version string, path string, force bool) {
