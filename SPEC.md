@@ -43,7 +43,8 @@ Flags:
 
 ### core:config
 
-Configure wordpress core. Not implemented yet.
+Configure wordpress core. Generates a new `wp-config.php` file under wordpress
+core dir. 
 
 Flags:
 
