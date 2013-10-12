@@ -14,7 +14,7 @@ import(
 
 const(
   WP_DOWNLOAD_URL  = "http://wordpress.org/wordpress-%s.tar.gz"
-  WP_VERSIONS_FILE = "https://gist.github.com/sosedoff/3730299d7c4ef0c5bc70/raw/wp-versions.txt"
+  WP_VERSIONS_FILE = "https://raw.github.com/doejo/wptool/master/core-versions.txt"
 )
 
 func fileExists(path string) bool {
