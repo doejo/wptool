@@ -47,10 +47,16 @@ Configure wordpress core. Not implemented yet.
 
 Flags:
 
+- `-p`, `--path PATH` - Path to wordpress core
+- `-t`, `--template PATH` - Path to config template
+- `-f`, `--force` - Force config override
 - `--dbname` - Name of database
-- `--dbhost` - Database connection host (Default: localhost)
+- `--dbhost` - Database connection host (Default: "localhost")
 - `--dbuser` - Database connection user
 - `--dbpass` - Database connection password
+- `--dbcharset` - Database charset (Default: "utf8")
+- `--dbcollate` - Database collate
+- `--dbprefix` - Tables prefix (Default: "wp_")
 
 ## Plugins
 
