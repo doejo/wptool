@@ -17,6 +17,13 @@ const(
   WP_VERSIONS_FILE = "https://raw.github.com/doejo/wptool/master/core-versions.txt"
 )
 
+type CoreConfigOptions struct {
+  DbName string `long:"dbname" description:"Set the database name"`
+  DbHost string `long:"dbhost" description:"Set the database host. Default: 'localhost'"`
+  DbUser string `long:"dbuser" description:"Set the database user"`
+  DbPass string `long:"dbpass" description:"Set the database password"`
+}
+
 func fileExists(path string) bool {
   _, err := os.Stat(path)
  
@@ -132,6 +139,10 @@ func wp_core_download(version string, path string, force bool) {
 
   /* Print installed version */
   wp_core_version(path)
+}
+
+func wp_core_config(path string) {
+
 }
 
 func handle_command(command string) {
