@@ -195,6 +195,9 @@ func handle_command(command string) {
    wp_core_download(opts.Version, opts.Path, opts.Force)
    return
   }
+
+  fmt.Println("Invalid command")
+  os.Exit(1)
 }
  
 func main() {
