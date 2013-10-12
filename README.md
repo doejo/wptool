@@ -26,7 +26,7 @@ go build wptool.go
 ## Usage
 
 ```
-wptool COMMAND [FLAGS]
+wptool COMMAND [ARGS]
 ```
 
 List of available commands:
@@ -49,7 +49,7 @@ Prints installed wordpress core version. Does not invoke any PHP code at all,
 just reads contents of `wp-includes/version.php` and parses wordpress version. 
 If path is not specified, it will use current path.
 
-Flags:
+Arguments:
 
 - `-p`, `--path PATH` - Specify path to wordpress core dir
 
@@ -60,7 +60,7 @@ core. Also possible to specify beta releases. In case when upgrade is required,
 provide `-f` flag and existing core will be replaced with a new one.
 Configuration is required after core is replaced.
 
-Flags:
+Arguments:
 
 - `-v`, `--version VERSION` - Specify version to download
 - `-p`, `--path PATH` - Specify path to extract
@@ -71,7 +71,7 @@ Flags:
 Configure wordpress core. Generates a new `wp-config.php` file under wordpress
 core dir. 
 
-Flags:
+Arguments:
 
 - `-p`, `--path PATH` - Path to wordpress core
 - `-t`, `--template PATH` - Path to config template
