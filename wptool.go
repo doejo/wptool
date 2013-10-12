@@ -22,6 +22,12 @@ const(
   WP_SALTS_API     = "https://api.wordpress.org/secret-key/1.1/salt/"
 )
 
+type CoreDownloadOptions struct {
+  Version string `short:"v" long:"version" description:"Core version"`
+  Path    string `short:"p" long:"path" description:"Path to install"`
+  Force   bool   `short:"f" long:"force" description:"Force override"`
+}
+
 type CoreConfigOptions struct {
   Path      string `short:"p" long:"path" description:"Path to wordpress core"`
   Template  string `short:"t" long:"template" description:"Config template"`
@@ -35,10 +41,14 @@ type CoreConfigOptions struct {
   DbPrefix  string `long:"dbprefix" description:"Set the database prefix"`
 }
 
-type CoreDownloadOptions struct {
-  Version string `short:"v" long:"version" description:"Core version"`
-  Path    string `short:"p" long:"path" description:"Path to install"`
-  Force   bool   `short:"f" long:"force" description:"Force override"`
+type CoreInstallOptions struct {
+  Path          string `short:"p" long:"path" description:"Path to wordpress core"`
+  Force         bool   `short:"f" long:"force" description:"Force config update"`
+  Url           string `long:"url" description:"The address of the new site."`
+  Title         string `long:"title" description:"The title of the new site"`
+  AdminUser     string `long:"admin_user" description:"The name of the admin user"`
+  AdminPassword string `long:"admin_password" description:"The password for the admin user"`
+  AdminEmail    string `long:"admin_email" description:"The email address for the admin user"`
 }
 
 func getUrlContents(url string) string {
@@ -242,6 +252,10 @@ func wp_core_config(options *CoreConfigOptions) {
   fmt.Printf("New config file generated at %s\n", config_path)
 }
 
+func wp_core_install(options *CoreInstallOptions) {
+
+}
+
 func handle_command(command string) {
   if command == "core:version" {
     var opts struct {
@@ -339,6 +353,19 @@ func handle_command(command string) {
     }
 
     wp_core_config(&opts)
+    return
+  }
+
+  if command == "core:install" {
+    opts := CoreInstallOptions {}
+    
+    _, err := flags.ParseArgs(&opts, os.Args)
+    if err != nil {
+      fmt.Println("Error", err)
+      os.Exit(1)
+    }
+
+    wp_core_install(&opts)
     return
   }
 
