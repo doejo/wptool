@@ -32,6 +32,12 @@ type CoreConfigOptions struct {
   DbPrefix  string `long:"dbprefix" description:"Set the database prefix"`
 }
 
+type CoreDownloadOptions struct {
+  Version string `short:"v" long:"version" description:"Core version"`
+  Path    string `short:"p" long:"path" description:"Path to install"`
+  Force   bool   `short:"f" long:"force" description:"Force override"`
+}
+
 func getUrlContents(url string) string {
   var err error
   var resp *http.Response
@@ -114,15 +120,15 @@ func wp_core_list() {
   fmt.Println(result)
 }
 
-func wp_core_download(version string, path string, force bool) {
-  url := fmt.Sprintf(WP_DOWNLOAD_URL, version)
+func wp_core_download(options *CoreDownloadOptions) {
+  url := fmt.Sprintf(WP_DOWNLOAD_URL, options.Version)
   temp := "/tmp/wordpress.tar.gz"
 
   if fileExists(temp) {
     run(fmt.Sprintf("rm -f %s", temp))
   }
 
-  if fileExists(path) && !force {
+  if fileExists(options.Path) && !options.Force {
     fmt.Println("Target path already exists!")
     os.Exit(1)
   }
@@ -146,12 +152,12 @@ func wp_core_download(version string, path string, force bool) {
   }
 
   /* Remove existing directory with `--force` option */
-  if fileExists(path) && force {
-    run(fmt.Sprintf("rm -rf %s", path))
+  if fileExists(options.Path) && options.Force {
+    run(fmt.Sprintf("rm -rf %s", options.Path))
   }
 
   /* Move extracted files to target directory */
-  _, err = run(fmt.Sprintf("mv /tmp/wordpress %s", path))
+  _, err = run(fmt.Sprintf("mv /tmp/wordpress %s", options.Path))
   if (err != nil) {
     fmt.Println("Failed to move extracted core")
     os.Exit(1)
@@ -161,7 +167,7 @@ func wp_core_download(version string, path string, force bool) {
   run(fmt.Sprintf("rm -f %s", temp))
 
   /* Print installed version */
-  wp_core_version(path)
+  wp_core_version(options.Path)
 }
 
 func wp_core_config(options *CoreConfigOptions) {
@@ -234,11 +240,7 @@ func handle_command(command string) {
   }
 
   if command == "core:download" {
-    var opts struct {
-      Version string `short:"v" long:"version" description:"Core version"`
-      Path string    `short:"p" long:"path" description:"Path to install"`
-      Force bool     `short:"f" long:"force" description:"Force override"`
-    }
+    opts := CoreDownloadOptions {}
 
     _, err := flags.ParseArgs(&opts, os.Args)
     if err != nil {
@@ -255,13 +257,13 @@ func handle_command(command string) {
       os.Exit(1)
     }
 
-   wp_core_download(opts.Version, opts.Path, opts.Force)
-   return
+    wp_core_download(&opts)
+    return
   }
 
   if command == "core:config" {
     opts := CoreConfigOptions {}
-
+    
     _, err := flags.ParseArgs(&opts, os.Args)
     if err != nil {
       fmt.Println("Error", err)
