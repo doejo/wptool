@@ -81,6 +81,25 @@ func run(command string) (string, error) {
   return output.String(), err
 }
 
+func checkDbConnection(config *CoreConfigOptions) {
+  _, err := run("which mysql")
+  if err != nil {
+    fmt.Println("MySQL client is not installed")
+    os.Exit(1)
+  }
+
+  cmd := fmt.Sprintf(
+    "mysql --no-defaults -h %s -u %s -p%s -e ';'",
+    config.DbHost, config.DbUser, config.DbPass,
+  )
+
+  _, err = run(cmd)
+  if err != nil {
+    fmt.Println("Unable to establish connection to MySQL")
+    os.Exit(1)
+  }
+}
+
 func wp_core_version(path string) {
   version_path := fmt.Sprintf("%s/wp-includes/version.php", path)
 
@@ -189,6 +208,9 @@ func wp_core_config(options *CoreConfigOptions) {
     fmt.Println("Unable to get salts from wordpress API")
     os.Exit(1)
   }
+
+  /* Check database connection */
+  checkDbConnection(options)
 
   /* Setup config for rendering */
   config := map[string]string {
