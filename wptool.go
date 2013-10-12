@@ -18,6 +18,7 @@ const VERSION = "0.1.0"
 const(
   WP_DOWNLOAD_URL  = "http://wordpress.org/wordpress-%s.tar.gz"
   WP_VERSIONS_FILE = "https://raw.github.com/doejo/wptool/master/core-versions.txt"
+  WP_CONFIG_FILE   = "https://raw.github.com/doejo/wptool/master/templates/wp-config.mustache"
   WP_SALTS_API     = "https://api.wordpress.org/secret-key/1.1/salt/"
 )
 
@@ -313,11 +314,6 @@ func handle_command(command string) {
       opts.DbCharset = "utf8"
     }
 
-    if len(opts.Template) == 0 {
-      fmt.Println("Template path required")
-      os.Exit(1)
-    }
-
     if len(opts.DbName) == 0 {
       fmt.Println("Database name required")
       os.Exit(1)
@@ -331,6 +327,15 @@ func handle_command(command string) {
     if len(opts.DbPass) == 0 {
       fmt.Println("Database password required")
       os.Exit(1)
+    }
+
+    if len(opts.Template) == 0 {
+      opts.Template = getUrlContents(WP_CONFIG_FILE);
+
+      if len(opts.Template) == 0 {
+        fmt.Println("Config template path required")
+        os.Exit(1)
+      }
     }
 
     wp_core_config(&opts)
