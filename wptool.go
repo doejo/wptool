@@ -13,6 +13,8 @@ import(
   "github.com/hoisie/mustache"
 )
 
+const VERSION = "0.1.0"
+
 const(
   WP_DOWNLOAD_URL  = "http://wordpress.org/wordpress-%s.tar.gz"
   WP_VERSIONS_FILE = "https://raw.github.com/doejo/wptool/master/core-versions.txt"
