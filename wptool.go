@@ -10,18 +10,46 @@ import(
   "regexp"
   "strings"
   "github.com/jessevdk/go-flags"
+  "github.com/hoisie/mustache"
 )
 
 const(
   WP_DOWNLOAD_URL  = "http://wordpress.org/wordpress-%s.tar.gz"
   WP_VERSIONS_FILE = "https://raw.github.com/doejo/wptool/master/core-versions.txt"
+  WP_SALTS_API     = "https://api.wordpress.org/secret-key/1.1/salt/"
 )
 
 type CoreConfigOptions struct {
-  DbName string `long:"dbname" description:"Set the database name"`
-  DbHost string `long:"dbhost" description:"Set the database host. Default: 'localhost'"`
-  DbUser string `long:"dbuser" description:"Set the database user"`
-  DbPass string `long:"dbpass" description:"Set the database password"`
+  Path      string `short:"p" long:"path" description:"Path to wordpress core"`
+  Template  string `short:"t" long:"template" description:"Config template"`
+  Force     bool   `short:"f" long:"force" description:"Force config update"`
+  DbName    string `long:"dbname" description:"Set the database name"`
+  DbHost    string `long:"dbhost" description:"Set the database host. Default: 'localhost'"`
+  DbUser    string `long:"dbuser" description:"Set the database user"`
+  DbPass    string `long:"dbpass" description:"Set the database password"`
+  DbCharset string `long:"dbcharset" description:"Set the database charset"`
+  DbCollate string `long:"dbcollate" description: "Set the database collate type"`
+  DbPrefix  string `long:"dbprefix" description:"Set the database prefix"`
+}
+
+func getUrlContents(url string) string {
+  var err error
+  var resp *http.Response
+  var body []byte
+
+  resp, err = http.Get(url)
+  if err != nil {
+    return ""
+  }
+
+  defer resp.Body.Close()
+
+  body, err = ioutil.ReadAll(resp.Body)
+  if err != nil {
+    return ""
+  }
+
+  return string(body)
 }
 
 func fileExists(path string) bool {
@@ -141,8 +169,48 @@ func wp_core_download(version string, path string, force bool) {
   wp_core_version(path)
 }
 
-func wp_core_config(path string) {
+func wp_core_config(options *CoreConfigOptions) {
+  var err error
+  
+  config_path := fmt.Sprintf("%s/wp-config.php", options.Path)
 
+  if fileExists(config_path) && !options.Force {
+    fmt.Println("Config file already exists")
+    os.Exit(1)
+  }
+
+  /* Get keys and salts from wp api */
+  salts := getUrlContents(WP_SALTS_API)
+  if len(salts) == 0 {
+    fmt.Println("Unable to get salts from wordpress API")
+    os.Exit(1)
+  }
+
+  /* Setup config for rendering */
+  config := map[string]string {
+    "dbname":    options.DbName,
+    "dbuser":    options.DbUser,
+    "dbpass":    options.DbPass,
+    "dbhost":    options.DbHost,
+    "dbcharset": options.DbCharset,
+    "dbcollate": options.DbCollate,
+    "dbprefix":  options.DbPrefix,
+    "keys-and-salts": salts,
+  }
+
+  /* Remove existing config file */
+  run(fmt.Sprintf("rm -f %s", config_path))
+
+  result := mustache.RenderFile(options.Template, config)
+  err = ioutil.WriteFile(config_path, []byte(result), 0644)
+
+  if err != nil {
+    fmt.Println(err)
+    os.Exit(1)
+  }
+
+  /* Print result */
+  fmt.Printf("New config file generated at %s\n", config_path)
 }
 
 func handle_command(command string) {
@@ -194,6 +262,55 @@ func handle_command(command string) {
 
    wp_core_download(opts.Version, opts.Path, opts.Force)
    return
+  }
+
+  if command == "core:config" {
+    opts := CoreConfigOptions {}
+
+    _, err := flags.ParseArgs(&opts, os.Args)
+    if err != nil {
+      fmt.Println("Error", err)
+      os.Exit(1)
+    }
+
+    if len(opts.Path) == 0 {
+      opts.Path, _ = os.Getwd()
+    }
+
+    if len(opts.DbHost) == 0 {
+      opts.DbHost = "localhost"
+    }
+
+    if len(opts.DbPrefix) == 0 {
+      opts.DbPrefix = "wp_"
+    }
+
+    if len(opts.DbCharset) == 0 {
+      opts.DbCharset = "utf8"
+    }
+
+    if len(opts.Template) == 0 {
+      fmt.Println("Template path required")
+      os.Exit(1)
+    }
+
+    if len(opts.DbName) == 0 {
+      fmt.Println("Database name required")
+      os.Exit(1)
+    }
+
+    if len(opts.DbUser) == 0 {
+      fmt.Println("Database user required")
+      os.Exit(1)
+    }
+
+    if len(opts.DbPass) == 0 {
+      fmt.Println("Database password required")
+      os.Exit(1)
+    }
+
+    wp_core_config(&opts)
+    return
   }
 
   fmt.Println("Invalid command")
