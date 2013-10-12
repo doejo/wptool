@@ -4,6 +4,7 @@
 
 ```
 core:list
+core:version
 core:download
 core:download -v 3.6
 core:download --version 3.5.RC1

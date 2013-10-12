@@ -7,6 +7,8 @@ import(
   "bytes"
   "net/http"
   "io/ioutil"
+  "regexp"
+  "strings"
   "github.com/jessevdk/go-flags"
 )
 
@@ -37,7 +39,35 @@ func run(command string) (string, error) {
   err := cmd.Run()
   return output.String(), err
 }
- 
+
+func wp_core_version(path string) {
+  version_path := fmt.Sprintf("%s/wp-includes/version.php", path)
+
+  if !fileExists(version_path) {
+    fmt.Println("Not a wordpress core")
+    os.Exit(1)
+  }
+
+  buff, err := ioutil.ReadFile(version_path)
+  if err != nil {
+    fmt.Println("Unable to read version file")
+    os.Exit(1)
+  }
+
+  exp := regexp.MustCompile(`wp_version = '(.*)'`)
+  match := exp.FindString(string(buff))
+
+  if len(match) == 0 {
+    fmt.Println("Unable to find version")
+    os.Exit(1)
+  }
+
+  chunks  := strings.Split(strings.TrimSpace(match), " ")
+  version := strings.Replace(chunks[len(chunks) - 1], "'", "", -1)
+
+  fmt.Println("Installed version:", version) 
+}
+
 func wp_core_list() {
   resp, err := http.Get(WP_VERSIONS_FILE)
 
@@ -96,11 +126,37 @@ func wp_core_download(version string, path string, force bool) {
     fmt.Println("Failed to move extracted core")
     os.Exit(1)
   }
+
+  /* Cleanup */
+  run(fmt.Sprintf("rm -f %s", temp))
+
+  /* Print installed version */
+  wp_core_version(path)
 }
 
 func handle_command(command string) {
+  if command == "core:version" {
+    var opts struct {
+      Path string `short:"p" long:"path" description:"Path to core"`
+    }
+
+    _, err := flags.ParseArgs(&opts, os.Args)
+    if err != nil {
+      fmt.Println("Error", err)
+      os.Exit(1)
+    }
+
+    if len(opts.Path) == 0 {
+      opts.Path, _ = os.Getwd()
+    }
+
+    wp_core_version(opts.Path)
+    return
+  }
+
   if command == "core:list" {
     wp_core_list()
+    return
   }
 
   if command == "core:download" {
@@ -126,6 +182,7 @@ func handle_command(command string) {
     }
 
    wp_core_download(opts.Version, opts.Path, opts.Force)
+   return
   }
 }
  
