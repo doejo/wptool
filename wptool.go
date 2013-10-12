@@ -337,6 +337,11 @@ func handle_command(command string) {
     return
   }
 
+  if command == "version" {
+    fmt.Printf("wptool v%s\n", VERSION)
+    return
+  }
+
   fmt.Println("Invalid command")
   os.Exit(1)
 }
