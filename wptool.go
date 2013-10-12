@@ -54,15 +54,20 @@ func wp_core_list() {
   fmt.Println(string(body))
 }
 
-func wp_core_download(version string, path string) {
+func wp_core_download(version string, path string, force bool) {
   url := fmt.Sprintf(WP_DOWNLOAD_URL, version)
   temp := "/tmp/wordpress.tar.gz"
 
   if fileExists(temp) {
     run(fmt.Sprintf("rm -f %s", temp))
   }
- 
-  fmt.Println("Downloading core")
+
+  if fileExists(path) && !force {
+    fmt.Println("Target path already exists!")
+    os.Exit(1)
+  }
+
+  /* Download specified wordpress core */
   cmd := fmt.Sprintf("wget -O %s %s", temp, url)
   out, err := run(cmd)
 
@@ -72,16 +77,23 @@ func wp_core_download(version string, path string) {
     os.Exit(1)
   }
  
-  fmt.Println("Extracting core")
- 
-  if fileExists(path) {
-    fmt.Println("Removing and old directory")
-    run(fmt.Sprintf("rm -rf %s", path))
-  }
- 
-  _, err = run(fmt.Sprintf("cd /tmp && tar -zxf %s", temp))
+  /* Extract downloaded core tarball */
+  out, err = run(fmt.Sprintf("cd /tmp && tar -zxf %s", temp))
   if err != nil {
     fmt.Println("Failed to extract wordpress core:", err)
+    fmt.Println(out)
+    os.Exit(1)
+  }
+
+  /* Remove existing directory with `--force` option */
+  if fileExists(path) && force {
+    run(fmt.Sprintf("rm -rf %s", path))
+  }
+
+  /* Move extracted files to target directory */
+  _, err = run(fmt.Sprintf("mv /tmp/wordpress %s", path))
+  if (err != nil) {
+    fmt.Println("Failed to move extracted core")
     os.Exit(1)
   }
 }
@@ -95,6 +107,7 @@ func handle_command(command string) {
     var opts struct {
       Version string `short:"v" long:"version" description:"Core version"`
       Path string    `short:"p" long:"path" description:"Path to install"`
+      Force bool     `short:"f" long:"force" description:"Force override"`
     }
 
     _, err := flags.ParseArgs(&opts, os.Args)
@@ -112,7 +125,7 @@ func handle_command(command string) {
       os.Exit(1)
     }
 
-   wp_core_download(opts.Version, opts.Path)
+   wp_core_download(opts.Version, opts.Path, opts.Force)
   }
 }
  
