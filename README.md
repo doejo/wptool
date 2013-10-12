@@ -31,11 +31,16 @@ wptool COMMAND [ARGS]
 
 List of available commands:
 
+- `version`
 - `core:list`
 - `core:version`
 - `core:download`
 - `core:config`
 - `core:install`
+
+### version
+
+Prints current version of `wptool`
 
 ### core:list
 
